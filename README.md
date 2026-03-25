@@ -66,10 +66,16 @@
 git clone https://github.com
 cd TurDubna
 
-2. Установка зависимостей
+---
+
+###2. Установка зависимостей
+```bash
 pip install -r requirements.txt
 
-3. Настройка БД и запуск
+---
+
+### 3. Настройка БД и запуск
+```bash
 python manage.py migrate
 python manage.py runserver
 
