@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% block title %}ТУРДУБНА — Личный Кабинет{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-hero { padding: 40px 0 20px 0; }
+    .hero-title-profile {
+        font-family: 'Montserrat', sans-serif; font-weight: 900;
+        font-size: clamp(2.2rem, 6vw, 4.5rem); line-height: 1.1;
+        letter-spacing: -2px; text-transform: uppercase; margin: 0;
+    }
+    .hero-accent { color: var(--primary); }
+
+    .profile-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; margin: 40px 0 100px; }
+
+    /* КАРТОЧКА ПОЛЬЗОВАТЕЛЯ */
+    .bento-user {
+        background: var(--card-bg); border: 1px solid var(--border);
+        border-radius: 50px; padding: 50px; display: flex;
+        align-items: center; gap: 40px; transition: 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+    }
+    .bento-user:hover { transform: translateY(-5px); border-color: var(--primary); }
+
+    .avatar-box {
+        width: 140px; height: 140px; border-radius: 45px;
+        background: linear-gradient(135deg, var(--primary), #5856d6);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 4rem; font-weight: 900; color: white;
+        box-shadow: 0 15px 35px rgba(0, 122, 255, 0.3);
+        overflow: hidden; flex-shrink: 0;
+    }
+    .avatar-box img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* КНОПКИ */
+    .profile-actions { display: flex; align-items: center; gap: 12px; margin-top: 25px; }
+    .btn-p {
+        height: 48px; display: inline-flex; align-items: center; justify-content: center;
+        padding: 0 28px; border-radius: 100px; font-weight: 800; font-size: 0.8rem;
+        letter-spacing: 1px; text-transform: uppercase; cursor: pointer;
+        transition: 0.3s; box-sizing: border-box; border: none; text-decoration: none;
+    }
+    .btn-s { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
+    .btn-l { background: #ff3b30; color: white !important; }
+
+    /* СТАТИСТИКА */
+    .bento-stat {
+        background: #1c1c1e; border-radius: 50px; padding: 40px;
+        display: flex; flex-direction: column; justify-content: center;
+        align-items: center; text-align: center; color: white;
+        border: 1px solid rgba(255,255,255,0.05);
+    }
+    .stat-number { font-size: 6rem; font-weight: 900; color: var(--primary); line-height: 1; margin: 0; }
+    .stat-desc { text-transform: uppercase; letter-spacing: 2px; font-size: 0.7rem; opacity: 0.5; margin-top: 10px; }
+
+    /* ПРОГРЕСС-БАР */
+    .progress-card {
+        grid-column: span 2; background: var(--card-bg); border-radius: 40px;
+        padding: 35px 45px; border: 1px solid var(--border); margin-top: 10px;
+    }
+    .progress-bar-bg { width: 100%; height: 12px; background: var(--bg); border-radius: 100px; overflow: hidden; margin: 15px 0; }
+    .progress-bar-fill {
+        height: 100%; background: linear-gradient(90deg, #007AFF, #5856D6);
+        width: 0; transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* МАРШРУТЫ */
+    .fav-card {
+        background: var(--card-bg); border-radius: 35px; padding: 22px 30px;
+        margin-bottom: 15px; border: 1px solid var(--border);
+        display: flex; justify-content: space-between; align-items: center;
+        text-decoration: none; color: inherit; transition: 0.3s;
+    }
+    .fav-card:hover { border-color: var(--primary); transform: translateX(8px); }
+
+    /* МОДАЛКА */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
+    .modal-card { background: var(--card-bg); border-radius: 40px; padding: 45px; width: 100%; max-width: 460px; border: 1px solid var(--border); animation: modalIn 0.4s ease-out; }
+    .s-input { width: 100%; padding: 18px; border-radius: 18px; background: var(--bg); border: 1px solid var(--border); color: var(--text-main); margin-bottom: 20px; font-size: 1rem; box-sizing: border-box; }
+
+    @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+    @media (max-width: 992px) { .profile-grid { grid-template-columns: 1fr; } .progress-card { grid-column: span 1; } .bento-user { flex-direction: column; text-align: center; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="profile-hero">
+        <h1 class="hero-title-profile">Личный <span class="hero-accent">Кабинет</span></h1>
+    </div>
+
+    <div class="profile-grid">
+        <!-- КАРТОЧКА ПРОФИЛЯ -->
+        <div class="bento-user">
+            <div class="avatar-box">
+                {% if user.profile.avatar %}
+                    <img src="{{ user.profile.avatar.url }}" alt="{{ user.username }}">
+                {% else %}
+                    {{ user.username|first|upper }}
+                {% endif %}
+            </div>
+            <div>
+                <h2 style="font-size: 2.8rem; margin: 0; font-weight: 900; letter-spacing: -1px;">{{ user.first_name|default:user.username }}</h2>
+                <p style="color: var(--text-sec); margin: 5px 0 0; font-weight: 500;">{{ user.email|default:"Исследователь Дубны" }}</p>
+                <div class="profile-actions">
+                    <button onclick="toggleModal(true)" class="btn-p btn-s">НАСТРОЙКИ</button>
+                    <form action="{% url 'logout' %}" method="post" style="margin: 0;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-p btn-l">ВЫЙТИ</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- СТАТИСТИКА -->
+        <div class="bento-stat">
+            <p class="stat-number">{{ fav_count }}</p>
+            <p class="stat-desc">Сохранено<br>маршрутов</p>
+        </div>
+
+        <!-- КАРТОЧКА ПРОГРЕССА -->
+        <div class="progress-card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: 800; font-size: 1rem; opacity: 0.6;">ПРОГРЕСС ИССЛЕДОВАТЕЛЯ</span>
+                <span style="font-weight: 900; color: var(--primary); font-size: 1.2rem;">{{ progress_percent }}%</span>
+            </div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="pBar"></div>
+            </div>
+            <p style="margin: 0; color: var(--text-sec); font-size: 0.85rem; font-weight: 600;">
+                Вы прошли {{ fav_count }} из {{ total_routes_count|default:0 }} доступных маршрутов наукограда.
+            </p>
+        </div>
+
+        <!-- МОИ МАРШРУТЫ -->
+        <div style="grid-column: span 2;">
+            <h2 class="section-title" style="margin: 30px 0 25px; font-size: 2rem;">МОИ МАРШРУТЫ</h2>
+            {% for fav in favorites %}
+                <a href="{% url 'route_detail' fav.route.pk %}" class="fav-card">
+                    <div style="display: flex; align-items: center; gap: 20px;">
+                        {% if fav.route.image %}<img src="{{ fav.route.image.url }}" style="width: 60px; height: 60px; border-radius: 18px; object-fit: cover;">{% endif %}
+                        <div>
+                            <h3 style="margin:0; font-size: 1.4rem; font-weight: 800;">{{ fav.route.name }}</h3>
+                            <p style="margin:4px 0 0; color: var(--text-sec); font-size: 0.85rem;">📍 Исследуйте маршрут сейчас</p>
+                        </div>
+                    </div>
+                    <div class="btn btn-outline" style="border-radius: 100px; padding: 10px 25px; font-size: 0.75rem;">ОТКРЫТЬ</div>
+                </a>
+            {% empty %}
+                <div style="text-align: center; padding: 60px; background: var(--card-bg); border-radius: 40px; border: 2px dashed var(--border);">
+                    <p style="color: var(--text-sec); margin-bottom: 20px;">Пока нет сохраненных маршрутов</p>
+                    <a href="{% url 'all_routes' %}" class="btn btn-primary">Найти маршрут</a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- МОДАЛКА -->
+<div class="modal-overlay" id="settingsModal" onclick="if(event.target==this) toggleModal(false)">
+    <div class="modal-card">
+        <h2 style="font-family: 'Montserrat'; font-weight: 900; margin-bottom: 25px;">НАСТРОЙКИ</h2>
+        <form method="post" action="{% url 'update_profile' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <p style="font-size: 0.7rem; font-weight: 800; opacity: 0.5; margin: 0 0 5px 5px;">АВАТАРКА</p>
+            <input type="file" name="avatar" class="s-input" accept="image/*">
+            <input type="email" name="email" class="s-input" value="{{ user.email }}" placeholder="Email">
+            <input type="text" name="first_name" class="s-input" value="{{ user.first_name }}" placeholder="Имя">
+            <input type="text" name="last_name" class="s-input" value="{{ user.last_name }}" placeholder="Фамилия">
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button type="submit" class="btn-p btn-l" style="flex: 1.5; background: var(--primary);">СОХРАНИТЬ</button>
+                <button type="button" onclick="toggleModal(false)" class="btn-p btn-s" style="flex: 1;">ОТМЕНА</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function toggleModal(show) { document.getElementById('settingsModal').style.display = show ? 'flex' : 'none'; }
+    window.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+            document.getElementById('pBar').style.width = '{{ progress_percent }}%';
+        }, 300);
+    });
+</script>
+{% endblock %}

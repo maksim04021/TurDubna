@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+{% block title %}{{ route.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .route-wrapper {
+        display: flex;
+        justify-content: space-between;
+        gap: 60px;
+        padding: 60px 0 120px;
+        align-items: flex-start;
+    }
+
+    /* ЛЕВАЯ ЧАСТЬ: КОНТЕНТ */
+    .route-main-content {
+        flex: 1;
+        max-width: 700px;
+        animation: fadeIn 0.8s ease-out;
+    }
+
+    .route-title-hero {
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 900;
+        font-size: clamp(3rem, 8vw, 5.5rem);
+        line-height: 0.9;
+        letter-spacing: -3px;
+        margin: 0;
+        text-transform: uppercase;
+    }
+
+    .route-id-badge {
+        display: inline-block;
+        margin: 20px 0 60px;
+        padding: 8px 20px;
+        background: var(--border);
+        border-radius: 100px;
+        font-weight: 800;
+        font-size: 0.9rem;
+        color: var(--text-sec);
+    }
+
+    /* ПУТЕВОЙ ЛИСТ */
+    .timeline-title { font-size: 2rem; font-weight: 900; margin-bottom: 40px; }
+
+    .steps-container { position: relative; padding-left: 15px; }
+    .steps-container::before {
+        content: ''; position: absolute; left: 24px; top: 10px; bottom: 10px;
+        width: 2px; background: var(--border);
+    }
+
+    .step-row {
+        display: flex; align-items: center; gap: 25px;
+        margin-bottom: 30px; cursor: pointer; position: relative; z-index: 2;
+    }
+
+    .step-input { display: none; }
+
+    .step-marker {
+        width: 24px; height: 24px; border-radius: 50%;
+        border: 3px solid var(--bg); background: var(--border);
+        box-shadow: 0 0 0 2px var(--border); transition: 0.4s;
+    }
+
+    .step-input:checked + .step-marker {
+        background: #34c759; box-shadow: 0 0 0 2px #34c759;
+        transform: scale(1.2);
+    }
+
+    .step-text { font-size: 1.4rem; font-weight: 700; transition: 0.3s; color: var(--text-main); }
+    .step-input:checked ~ .step-text { opacity: 0.3; text-decoration: line-through; }
+
+    /* ПРАВАЯ ЧАСТЬ: БОКОВАЯ ПАНЕЛЬ */
+    .route-sidebar {
+        width: 420px;
+        position: sticky;
+        top: 130px;
+    }
+
+    .route-image-card {
+        background: white; border-radius: 50px; padding: 15px;
+        box-shadow: 0 40px 80px rgba(0,0,0,0.15); margin-bottom: 30px;
+        display: flex; justify-content: center;
+        /* Цикличная анимация покачивания */
+        animation: floatImg 5s ease-in-out infinite;
+    }
+
+    .route-image-card img { width: 100%; border-radius: 35px; object-fit: cover; }
+
+    .action-bento {
+        background: var(--card-bg); border-radius: 45px; padding: 40px;
+        border: 1px solid var(--border); text-align: center;
+    }
+
+    .btn-fav-detail {
+        width: 100%; padding: 22px; border-radius: 22px;
+        background: var(--primary); color: white; border: none;
+        font-size: 1.1rem; font-weight: 900; cursor: pointer;
+        transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .btn-fav-detail.is-active { background: #1c1c1e; }
+    .btn-fav-detail:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,122,255,0.4); }
+
+    /* АНИМАЦИИ */
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes floatImg {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-15px); }
+    }
+
+    @media (max-width: 1100px) {
+        .route-wrapper { flex-direction: column; }
+        .route-sidebar { width: 100%; position: static; }
+        .route-title-hero { font-size: 3.5rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="route-wrapper">
+
+        <!-- КОНТЕНТ СЛЕВА -->
+        <div class="route-main-content">
+            <h1 class="route-title-hero">{{ route.name }}</h1>
+            <div class="route-id-badge">МАРШРУТ #{{ route.id }}</div>
+
+            <div class="timeline-section">
+                <h2 class="timeline-title">Путевой лист</h2>
+                <div class="steps-container">
+                    {% for step in route.get_steps_list %}
+                    <label class="step-row">
+                        <input type="checkbox" class="step-input">
+                        <div class="step-marker"></div>
+                        <span class="step-text">{{ step }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- БОКОВАЯ ПАНЕЛЬ СПРАВА -->
+        <div class="route-sidebar">
+            <div class="route-image-card">
+                {% if route.image %}
+                    <img src="{{ route.image.url }}" alt="{{ route.name }}">
+                {% else %}
+                    <div style="padding: 60px; color: #ccc;">Нет фото</div>
+                {% endif %}
+            </div>
+
+            <div class="action-bento">
+                <h3 style="margin: 0 0 10px; font-size: 1.5rem; font-weight: 800;">Готовы в путь?</h3>
+                <p style="color: var(--text-sec); margin-bottom: 30px; font-size: 0.95rem; line-height: 1.5;">
+                    Исследуйте город по этапам.<br>Отмечайте пройденные точки!
+                </p>
+
+                {% if user.is_authenticated %}
+                <button class="btn-fav-detail {% if is_favorite %}is-active{% endif %}"
+                        id="favBtnDetail"
+                        onclick="toggleFavoriteDetail({{ route.id }})">
+                    {% if is_favorite %}УДАЛИТЬ ИЗ ИЗБРАННОГО{% else %}ДОБАВИТЬ В ИЗБРАННОЕ{% endif %}
+                </button>
+                {% else %}
+                <a href="{% url 'login' %}" class="btn-fav-detail" style="display: block; text-decoration: none;">ВОЙТИ И СОХРАНИТЬ</a>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+function toggleFavoriteDetail(routeId) {
+    const btn = document.getElementById('favBtnDetail');
+    fetch(`/toggle_favorite/${routeId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === 'added') {
+            btn.innerText = 'УДАЛИТЬ ИЗ ИЗБРАННОГО';
+            btn.classList.add('is-active');
+        } else {
+            btn.innerText = 'ДОБАВИТЬ В ИЗБРАННОЕ';
+            btn.classList.remove('is-active');
+        }
+    })
+    .catch(err => console.error('Ошибка:', err));
+}
+</script>
+{% endblock %}

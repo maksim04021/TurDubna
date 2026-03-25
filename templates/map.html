@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}КАРТА — ТУРДУБНА{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ПРИНУДИТЕЛЬНАЯ ВЫСОТА, чтобы карта не была черной */
+    #map {
+        height: 650px;
+        width: 100%;
+        border-radius: 45px;
+        border: 1px solid var(--border);
+        margin: 30px 0;
+        z-index: 1; /* Чтобы не перекрывала меню */
+    }
+    .leaflet-popup-content-wrapper { background: var(--card-bg); color: var(--text-main); border-radius: 20px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 style="font-family:'Montserrat'; font-size:3rem; margin-top:20px;">КАРТА <span style="color:var(--primary)">ГОРОДА</span></h1>
+
+    <div id="map"></div>
+
+    <script>
+        // Проверка: загрузился ли Leaflet
+        if (typeof L !== 'undefined') {
+            var map = L.map('map').setView([56.7320, 37.1670], 13);
+
+            // Темная тема карт CartoDB
+            L.tileLayer('https://{s}://{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap'
+            }).addTo(map);
+
+            // Метки из базы
+            {% for r in routes %}
+                {% if r.lat and r.lon %}
+                L.marker([{{ r.lat|stringformat:"f" }}, {{ r.lon|stringformat:"f" }}])
+                    .addTo(map)
+                    .bindPopup('<b style="font-size:1.1rem">{{ r.name }}</b><br><a href="{% url "route_detail" r.pk %}" style="color:var(--primary);text-decoration:none;font-weight:800;">ОТКРЫТЬ →</a>');
+                {% endif %}
+            {% endfor %}
+        } else {
+            document.getElementById('map').innerHTML = "<div style='padding:50px; text-align:center;'>Ошибка загрузки карты. Проверьте интернет-соединение.</div>";
+        }
+    </script>
+</div>
+{% endblock %}

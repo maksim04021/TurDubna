@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}{{ item.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .event-container {
+        display: grid;
+        grid-template-columns: 1fr 400px; /* Две колонки: текст и фото */
+        gap: 60px;
+        padding: 40px 0 100px;
+        align-items: start;
+    }
+
+    /* ТЕКСТОВАЯ ЧАСТЬ */
+    .event-info { animation: fIn 0.8s ease; }
+    .badge-row { display: flex; gap: 10px; margin-bottom: 25px; }
+    .badge {
+        padding: 8px 18px; border-radius: 100px; font-size: 0.7rem;
+        font-weight: 900; text-transform: uppercase; letter-spacing: 1px;
+    }
+    .badge-primary { background: var(--primary); color: white; }
+    .badge-glass { background: var(--border); color: var(--text-sec); }
+
+    .event-title {
+        font-family: 'Montserrat', sans-serif; font-weight: 900;
+        font-size: clamp(2.5rem, 6vw, 4.5rem); line-height: 1;
+        margin: 0 0 30px; letter-spacing: -2px;
+    }
+
+    .event-text {
+        font-size: 1.15rem; line-height: 1.8; color: var(--text-main);
+        max-width: 750px;
+    }
+
+    /* КОМПАКТНОЕ ФОТО */
+    .event-side { position: sticky; top: 110px; }
+    .img-card {
+        background: var(--card-bg); border-radius: 40px; padding: 12px;
+        border: 1px solid var(--border); box-shadow: 0 30px 60px rgba(0,0,0,0.1);
+    }
+    .img-card img {
+        width: 100%; border-radius: 32px; display: block;
+        max-height: 450px; object-fit: cover;
+    }
+
+    /* МОБИЛЬНАЯ АДАПТАЦИЯ */
+    @media (max-width: 1100px) {
+        .event-container { grid-template-columns: 1fr; gap: 40px; padding: 20px 0; }
+        .event-side { position: static; order: -1; } /* Картинка уходит наверх */
+        .img-card { border-radius: 35px; max-width: 500px; margin: 0 auto; }
+        .event-title { font-size: 3rem; text-align: center; }
+        .badge-row { justify-content: center; }
+    }
+    @keyframes fIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container event-container">
+    <div class="event-info">
+        <div class="badge-row">
+            <span class="badge badge-primary">📍 {{ item.location }}</span>
+            <span class="badge badge-glass">📅 {{ item.date_pub|date:"d E Y" }}</span>
+        </div>
+        <h1 class="event-title">{{ item.title }}</h1>
+        <div class="event-text">{{ item.text|linebreaks }}</div>
+        <div style="margin-top: 50px;">
+            <a href="{% url 'all_news' %}" class="btn btn-outline">← ВСЕ СОБЫТИЯ</a>
+        </div>
+    </div>
+
+    <div class="event-side">
+        <div class="img-card">
+            {% if item.image %}<img src="{{ item.image.url }}" alt="{{ item.title }}">{% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

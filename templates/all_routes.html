@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+{% block title %}МАРШРУТЫ{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Наследуем основные стили из твоего шаблона событий */
+    .page-wrapper {
+        max-width: 1300px;
+        margin: 0 auto;
+        padding: 60px 30px;
+    }
+
+    .main-title {
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 900;
+        font-size: 6rem;
+        text-transform: uppercase;
+        margin-bottom: 50px;
+        line-height: 0.9;
+        letter-spacing: -4px;
+    }
+
+    .bento-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 30px;
+    }
+
+    .bento-card {
+        position: relative;
+        height: 400px; /* Чуть выше, чем события */
+        border-radius: 40px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 35px;
+        text-decoration: none;
+        background: #111;
+        border: 1px solid var(--border);
+        transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.4s ease;
+    }
+
+    .bento-card:hover {
+        transform: translateY(-15px) scale(1.02);
+        box-shadow: 0 40px 100px rgba(0,0,0,0.6);
+        border-color: var(--primary);
+    }
+
+    .card-img {
+        position: absolute; inset: 0;
+        width: 100%; height: 100%;
+        object-fit: cover; z-index: 1;
+        opacity: 0.8;
+    }
+
+    .card-overlay {
+        position: absolute; inset: 0;
+        background: linear-gradient(to top, rgba(0,0,0,1) 10%, transparent 70%);
+        z-index: 2;
+    }
+
+    /* КНОПКА ИЗБРАННОГО */
+    .fav-btn {
+        position: absolute; top: 30px; right: 30px;
+        width: 54px; height: 54px;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(15px);
+        border-radius: 20px;
+        border: 1px solid rgba(255,255,255,0.2);
+        color: white;
+        display: flex; align-items: center; justify-content: center;
+        z-index: 10; font-size: 1.4rem;
+        cursor: pointer; transition: 0.3s;
+    }
+    .fav-btn:hover { background: #fff; color: #000; transform: rotate(10deg); }
+    .fav-btn.active { background: #ff3b30; color: #fff; border-color: #ff3b30; }
+
+    .card-content { position: relative; z-index: 3; }
+
+    .badge-row { display: flex; gap: 10px; margin-bottom: 15px; }
+    .badge {
+        padding: 8px 20px;
+        border-radius: 100px;
+        font-size: 0.75rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .badge-blue { background: #007AFF; color: #fff; }
+    .badge-blur { background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); color: #fff; }
+
+    .card-title {
+        color: #fff;
+        font-family: 'Montserrat', sans-serif;
+        font-size: 2.2rem;
+        font-weight: 900;
+        margin: 0;
+        line-height: 1;
+    }
+
+    .card-subtitle {
+        color: rgba(255,255,255,0.6);
+        font-size: 0.9rem;
+        margin-top: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    @media (max-width: 1000px) { .bento-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 700px) {
+        .bento-grid { grid-template-columns: 1fr; }
+        .main-title { font-size: 4rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <h1 class="main-title">МАРШРУТЫ</h1>
+
+    <div class="bento-grid">
+        {% for route in routes %}
+        <div style="position: relative;">
+            <!-- Кнопка Избранного (через AJAX) -->
+            {% if user.is_authenticated %}
+            <button class="fav-btn {% if route.id in user_fav_ids %}active{% endif %}"
+                    onclick="toggleFavorite(this, {{ route.id }})">
+                {% if route.id in user_fav_ids %}❤️{% else %}🤍{% endif %}
+            </button>
+            {% endif %}
+
+            <a href="{% url 'route_detail' route.pk %}" class="bento-card">
+                {% if route.image %}
+                <img src="{{ route.image.url }}" class="card-img">
+                {% endif %}
+                <div class="card-overlay"></div>
+
+                <div class="card-content">
+                    <div class="badge-row">
+                        <span class="badge badge-blue">Дубна</span>
+                        <span class="badge badge-blur">Маршрут</span>
+                    </div>
+                    <h3 class="card-title">{{ route.name }}</h3>
+                    <p class="card-subtitle">📍 Исследовательский маршрут</p>
+                </div>
+            </a>
+        </div>
+        {% empty %}
+        <p style="color: var(--text-sec); grid-column: span 3; text-align: center;">Маршрутов пока нет.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    function toggleFavorite(btn, routeId) {
+        // URL должен строго совпадать с тем, что в urls.py
+        fetch(`/toggle_favorite/${routeId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Ошибка 404: Путь не найден');
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'added') {
+                btn.innerHTML = '❤️';
+                btn.classList.add('active');
+            } else {
+                btn.innerHTML = '🤍';
+                btn.classList.remove('active');
+            }
+        })
+        .catch(err => console.error('Ошибка:', err));
+    }
+</script>
+{% endblock %}

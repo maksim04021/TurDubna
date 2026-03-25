@@ -1,0 +1,196 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>{% block title %}ТУРДУБНА{% endblock %}</title>
+
+    <!-- Шрифты -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com" rel="stylesheet">
+
+    <!-- КРИТИЧЕСКИ ВАЖНО: Подключаем Leaflet здесь, чтобы избежать ошибки "L is not defined" -->
+    <link rel="stylesheet" href="https://unpkg.com" />
+    <script src="https://unpkg.com"></script>
+
+    <style>
+        :root {
+            --primary: #007AFF; --bg: #f5f5f7; --card-bg: #ffffff;
+            --text-main: #1d1d1f; --text-sec: #86868b; --border: rgba(0,0,0,0.1);
+            --glass: rgba(255, 255, 255, 0.8);
+        }
+        [data-theme="dark"] {
+            --bg: #050505; --card-bg: #1c1c1e;
+            --text-main: #ffffff; --text-sec: #8e8e93; --border: rgba(255,255,255,0.1);
+            --glass: rgba(10, 10, 10, 0.8);
+        }
+
+        * { transition: background 0.3s ease, color 0.3s ease; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text-main);
+            margin: 0; padding: 0; line-height: 1.6; overflow-x: hidden;
+        }
+
+        .container { max-width: 1300px; margin: 0 auto; padding: 0 20px; }
+
+        /* НАВИГАЦИЯ */
+        .nav-glass {
+            position: fixed; top: 0; width: 100%; z-index: 1000;
+            background: var(--glass); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border-bottom: 1px solid var(--border); padding: 12px 0;
+        }
+        .nav-content { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+
+        .logo {
+            font-family: 'Montserrat', sans-serif; font-size: 1.4rem;
+            text-transform: uppercase; color: var(--text-main);
+            text-decoration: none; letter-spacing: -1.5px; font-weight: 900;
+        }
+
+        /* УМНЫЙ ПОИСК */
+        .search-container { position: relative; flex: 1; max-width: 350px; }
+        .search-input {
+            width: 100%; background: var(--border); border: none;
+            padding: 10px 20px; border-radius: 100px; color: var(--text-main);
+            font-size: 0.9rem; outline: none; font-weight: 600;
+        }
+        .search-results {
+            position: absolute; top: 130%; left: 0; width: 100%;
+            background: var(--card-bg); border-radius: 24px; border: 1px solid var(--border);
+            display: none; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            z-index: 2001; backdrop-filter: blur(25px);
+        }
+        .search-item {
+            display: block; padding: 16px 20px; text-decoration: none;
+            color: var(--text-main); border-bottom: 1px solid var(--border);
+            font-size: 0.9rem; font-weight: 700; transition: 0.2s;
+        }
+        .search-item:hover { background: var(--primary); color: white; }
+        .search-item:last-child { border-bottom: none; }
+
+        /* КНОПКИ ПРАВАЯ ЧАСТЬ */
+        .nav-right { display: flex; gap: 10px; align-items: center; }
+
+        .btn {
+            padding: 10px 22px; border-radius: 100px; font-weight: 800;
+            text-decoration: none; font-size: 0.85rem; border: none; cursor: pointer;
+            display: inline-flex; align-items: center; justify-content: center;
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .btn:hover { transform: scale(1.05); }
+        .btn-primary { background: var(--primary); color: white !important; }
+        .btn-outline { border: 1px solid var(--border); color: var(--text-main); background: transparent; }
+
+        .theme-toggle {
+            width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--border);
+            background: transparent; color: var(--text-main); cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+        }
+
+        main { padding-top: 90px; min-height: 100vh; }
+
+        /* АДАПТИВ */
+        @media (max-width: 900px) {
+            .search-container { display: none; }
+            .logo { font-size: 1.1rem; }
+            .btn { padding: 8px 14px; font-size: 0.75rem; }
+        }
+
+        {% block extra_css %}{% endblock %}
+    </style>
+</head>
+<body>
+    <nav class="nav-glass">
+        <div class="container nav-content">
+            <a href="{% url 'home' %}" class="logo">ТУРДУБНА</a>
+
+            <!-- ЖИВОЙ ПОИСК -->
+            <div class="search-container">
+                <input type="text" id="globalSearch" class="search-input" placeholder="Найти маршрут..." autocomplete="off">
+                <div id="globalResults" class="search-results"></div>
+            </div>
+
+            <div class="nav-right">
+                <a href="{% url 'map_view' %}" class="btn btn-outline">КАРТА</a>
+                <button class="theme-toggle" id="themeBtn">🌙</button>
+
+                {% if user.is_authenticated %}
+                    <a href="{% url 'profile' %}" class="btn btn-primary">ЛК</a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-primary">ВХОД</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <script>
+        // --- ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ ---
+        const themeBtn = document.getElementById('themeBtn');
+        const html = document.documentElement;
+
+        themeBtn.onclick = () => {
+            const isDark = html.getAttribute('data-theme') === 'dark';
+            const newTheme = isDark ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            themeBtn.innerText = newTheme === 'dark' ? '🌙' : '☀️';
+            localStorage.setItem('theme', newTheme);
+        };
+
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        html.setAttribute('data-theme', savedTheme);
+        themeBtn.innerText = savedTheme === 'dark' ? '🌙' : '☀️';
+
+        // --- ЛОГИКА ЖИВОГО ПОИСКА ---
+        const sInput = document.getElementById('globalSearch');
+        const sResults = document.getElementById('globalResults');
+
+        sInput.addEventListener('input', () => {
+            const q = sInput.value.trim();
+
+            if (q.length < 2) {
+                sResults.style.display = 'none';
+                return;
+            }
+
+            // fetch на твой эндпоинт во views.py
+            fetch(`/route_search/?q=${encodeURIComponent(q)}`)
+                .then(res => {
+                    if(!res.ok) throw new Error();
+                    return res.json();
+                })
+                .then(data => {
+                    sResults.innerHTML = '';
+                    if (data.results && data.results.length > 0) {
+                        data.results.forEach(r => {
+                            sResults.innerHTML += `
+                                <a href="/routes/${r.id}/" class="search-item">
+                                    ${r.name}
+                                </a>`;
+                        });
+                        sResults.style.display = 'block';
+                    } else {
+                        sResults.innerHTML = '<div class="search-item" style="opacity:0.4;">Ничего не найдено</div>';
+                        sResults.style.display = 'block';
+                    }
+                })
+                .catch(() => {
+                    console.log("Ошибка поиска. Проверь эндпоинт /route_search/");
+                });
+        });
+
+        // Закрытие при клике в пустое место
+        document.addEventListener('click', (e) => {
+            if (!sInput.contains(e.target) && !sResults.contains(e.target)) {
+                sResults.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
