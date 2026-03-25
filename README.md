@@ -3,9 +3,9 @@
 > **Веб-платформа для популяризации туристических возможностей наукограда Дубна.**
 > Индивидуальный проект обучающегося 10 класса «А» АНОО «МФМЛ им. академика В.Г. Кадышевского».
 
-[![Python](https://img.shields.io)](https://www.python.org)
-[![Django](https://img.shields.io)](https://www.djangoproject.com)
-[![License](https://img.shields.io)](LICENSE)
+[![Python]](https://www.python.org)
+[![Django]](https://www.djangoproject.com)
+[![License]](LICENSE)
 
 ---
 
