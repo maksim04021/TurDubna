@@ -49,3 +49,26 @@ pip install -r requirements.txt
 ```bash
 python manage.py migrate
 python manage.py runserver
+
+---
+
+## 📈 План развития (Roadmap)
+
+*   **Интерактивная карта:** Интеграция API Яндекс.Карты для навигации.
+*   **Система квестов:** Внедрение QR-кодов («чек-инов») на реальных объектах города.
+*   **Умные уведомления:** Telegram-бот для синхронизации с базой данных сайта.
+*   **PWA:** Трансформация сайта в мобильное приложение.
+
+---
+
+## 👥 Автор
+
+*   **Разработчик:** Фролов Максим
+*   **Локация:** г. Дубна, 2025-2026 уч. год.
+
+---
+
+## 🔗 Ссылки
+
+*   **Демо-версия:** [maksim04021.pythonanywhere.com](http://maksim04021.pythonanywhere.com)
+*   **Документация Django:** [docs.djangoproject.com](https://docs.djangoproject.com)
