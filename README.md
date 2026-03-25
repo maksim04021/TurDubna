@@ -36,6 +36,27 @@
 
 ## 🚀 Быстрый старт
 
+### 1. Клонирование репозитория
+```bash
+git clone https://github.com
+cd TurDubna
+```
+
+---
+
+###2. Установка зависимостей
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+### 3. Настройка БД и запуск
+```bash
+python manage.py migrate
+python manage.py runserver
+```
+
 ---
 
 ## 📈 План развития (Roadmap)
@@ -61,22 +82,4 @@
 
 ---
 
-### 1. Клонирование репозитория
-```bash
-git clone https://github.com
-cd TurDubna
 
----
-
-###2. Установка зависимостей
-```bash
-pip install -r requirements.txt
-
----
-
-### 3. Настройка БД и запуск
-```bash
-python manage.py migrate
-python manage.py runserver
-
----
