@@ -36,20 +36,6 @@
 
 ## 🚀 Быстрый старт
 
-### 1. Клонирование репозитория
-```bash
-git clone https://github.com
-cd TurDubna
-
-### 2. Установка зависимостей
-```bash
-pip install -r requirements.txt
-
-### 3. Настройка БД и запуск
-```bash
-python manage.py migrate
-python manage.py runserver
-
 ---
 
 ## 📈 План развития (Roadmap)
@@ -72,3 +58,19 @@ python manage.py runserver
 
 *   **Демо-версия:** [maksim04021.pythonanywhere.com](http://maksim04021.pythonanywhere.com)
 *   **Документация Django:** [docs.djangoproject.com](https://docs.djangoproject.com)
+
+---
+
+### 1. Клонирование репозитория
+```bash
+git clone https://github.com
+cd TurDubna
+
+2. Установка зависимостей
+pip install -r requirements.txt
+
+3. Настройка БД и запуск
+python manage.py migrate
+python manage.py runserver
+
+---
