@@ -44,7 +44,7 @@ cd TurDubna
 
 ---
 
-###2. Установка зависимостей
+### 2. Установка зависимостей
 ```bash
 pip install -r requirements.txt
 ```
